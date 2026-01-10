@@ -86,18 +86,21 @@ jobs:
 
       - name: Install Qt (aqt) for lrelease
         run: |
+          set -euxo pipefail
           python -m pip install --upgrade pip
           pip install aqtinstall
       
-          # バージョン確認（--version じゃなくて subcommand）
-          aqt version
-      
-          # Qt を入れる（例: 6.6.3）
           aqt install-qt linux desktop 6.6.3 gcc_64 -O ${{ runner.temp }}/Qt
       
+          # この step 内でも使えるように PATH を通す
+          export PATH="${{ runner.temp }}/Qt/6.6.3/gcc_64/bin:$PATH"
+      
+          # 次 step 用にも PATH を追加
           echo "${{ runner.temp }}/Qt/6.6.3/gcc_64/bin" >> $GITHUB_PATH
+      
           command -v lrelease
-          lrelease -h >/dev/null 2>&1 || true
+          lrelease -help >/dev/null 2>&1 || true
+
 
       - name: Run translation + PTL export
         env:
@@ -142,6 +145,7 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 
