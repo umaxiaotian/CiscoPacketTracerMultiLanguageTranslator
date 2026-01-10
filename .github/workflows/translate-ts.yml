@@ -84,14 +84,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai python-dotenv
 
-      - name: Install Qt lrelease (Ubuntu)
+      - name: Install Qt Linguist tools (Ubuntu)
         run: |
+          set -e
           sudo apt-get update
-          sudo apt-get install -y qt6-tools-dev-tools qt6-l10n-tools
+          sudo apt-get install -y qt6-tools-dev-tools linguist-qt6
       
-          # 確認だけ（exit code を壊さない）
-          command -v lrelease
-          lrelease -h > /dev/null 2>&1 || true
+          # lrelease の実体を探す（lrelease / lrelease-qt6 両対応）
+          if command -v lrelease >/dev/null 2>&1; then
+            echo "Found lrelease: $(command -v lrelease)"
+          elif command -v lrelease-qt6 >/dev/null 2>&1; then
+            echo "Found lrelease-qt6: $(command -v lrelease-qt6)"
+            # 以降の処理が lrelease を期待しているなら symlink を作る
+            sudo ln -sf "$(command -v lrelease-qt6)" /usr/local/bin/lrelease
+            echo "Symlinked /usr/local/bin/lrelease -> lrelease-qt6"
+          else
+            echo "ERROR: lrelease not found"
+            echo "PATH=$PATH"
+            ls -la /usr/bin | grep -E 'lrelease|lupdate|linguist' || true
+            exit 1
+          fi
+      
+          # 動作確認（戻り値が怪しいので落とさない）
+          lrelease -h >/dev/null 2>&1 || true
+      
 
 
 
@@ -137,6 +153,7 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 
