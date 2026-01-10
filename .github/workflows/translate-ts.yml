@@ -88,14 +88,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install aqtinstall
-          aqt --version
       
-          # Qt 6.6.3 を例に入れる（必要なら変更）
+          # バージョン確認（--version じゃなくて subcommand）
+          aqt version
+      
+          # Qt を入れる（例: 6.6.3）
           aqt install-qt linux desktop 6.6.3 gcc_64 -O ${{ runner.temp }}/Qt
       
           echo "${{ runner.temp }}/Qt/6.6.3/gcc_64/bin" >> $GITHUB_PATH
-          lrelease -h >/dev/null 2>&1 || true
           command -v lrelease
+          lrelease -h >/dev/null 2>&1 || true
 
       - name: Run translation + PTL export
         env:
@@ -140,6 +142,7 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 
