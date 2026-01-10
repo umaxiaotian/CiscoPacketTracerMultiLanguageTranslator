@@ -88,8 +88,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qt6-l10n-tools
-          which lrelease
-          lrelease -version
+          command -v lrelease
+          dpkg -s qt6-l10n-tools | sed -n 's/^Version: //p'
+
 
       - name: Run translation + PTL export
         env:
@@ -133,3 +134,4 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
