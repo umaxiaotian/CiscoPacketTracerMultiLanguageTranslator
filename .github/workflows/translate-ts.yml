@@ -1,22 +1,27 @@
-name: Translate Qt TS (AOAI) -> Release
+name: Translate Qt TS (AOAI) -> Release (with PTL)
 
 on:
   workflow_dispatch:
     inputs:
       input_ts:
-        description: "Input .ts file path (relative to repo)"
+        description: "Input .ts file path"
         required: true
-        default: "CiscoPacketTracerTemplate/template.ts"
+        default: "packet_tracer_template/template.ts"
       output_ts:
-        description: "Output .ts file path (relative to repo)"
+        description: "Output .ts file path"
         required: true
         default: "template.ja_JP.ts"
+      ptl_out:
+        description: "Output .ptl file path"
+        required: true
+        default: "template.ja_JP.ptl"
+
       language:
-        description: "TS language attribute (e.g., ja_JP)"
+        description: "TS language attribute"
         required: true
         default: "ja_JP"
       target_name:
-        description: "Target language display name (e.g., Japanese)"
+        description: "Target language display name"
         required: true
         default: "Japanese"
 
@@ -25,28 +30,24 @@ on:
         required: true
         default: "10"
       progress_every:
-        description: "Print progress every N processed items"
+        description: "Progress every N"
         required: true
         default: "50"
       max_retries:
-        description: "Max retries for transient failures"
+        description: "Max retries"
         required: true
         default: "6"
       timeout_sec:
-        description: "Per-request timeout seconds"
+        description: "Timeout seconds"
         required: true
         default: "60"
       save_every:
-        description: "Write partial output every N processed items"
+        description: "Save partial every N"
         required: true
         default: "200"
-      reset_failed_log:
-        description: "Reset failed log before run (true/false)"
-        required: true
-        default: "true"
 
       release_tag:
-        description: "Release tag (e.g., ts-2026-01-11)"
+        description: "Release tag"
         required: true
         default: "ts-translation"
       release_name:
@@ -58,20 +59,9 @@ on:
         required: true
         default: "false"
       release_notes:
-        description: "Release notes (markdown ok)"
+        description: "Release notes"
         required: true
-        default: |
-          Automated translation output.
-
-      # optional price overrides (manual)
-      price_input_per_1m:
-        description: "Price: input USD per 1M tokens (optional)"
-        required: false
-        default: ""
-      price_output_per_1m:
-        description: "Price: output USD per 1M tokens (optional)"
-        required: false
-        default: ""
+        default: "Automated translation output."
 
 permissions:
   contents: write
@@ -82,11 +72,9 @@ jobs:
     timeout-minutes: 180
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
@@ -96,29 +84,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai python-dotenv
 
-      - name: Validate input file
+      - name: Install Qt lrelease
         run: |
-          set -e
-          test -f "${{ inputs.input_ts }}" || (echo "Input file not found: ${{ inputs.input_ts }}" && exit 1)
+          sudo apt-get update
+          sudo apt-get install -y qt6-l10n-tools
+          which lrelease
+          lrelease -version
 
-      - name: Run translation
+      - name: Run translation + PTL export
         env:
-          # AOAI secrets
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
-
-          # Pricing: input override > repo var > script default
-          PRICE_INPUT_PER_1M: ${{ inputs.price_input_per_1m != '' && inputs.price_input_per_1m || vars.PRICE_INPUT_PER_1M }}
-          PRICE_OUTPUT_PER_1M: ${{ inputs.price_output_per_1m != '' && inputs.price_output_per_1m || vars.PRICE_OUTPUT_PER_1M }}
         run: |
           set -e
-
-          RESET_FLAG=""
-          if [ "${{ inputs.reset_failed_log }}" = "true" ]; then
-            RESET_FLAG="--reset-failed-log"
-          fi
-
           python src/main.py "${{ inputs.input_ts }}" \
             -o "${{ inputs.output_ts }}" \
             --language "${{ inputs.language }}" \
@@ -128,19 +107,20 @@ jobs:
             --max-retries "${{ inputs.max_retries }}" \
             --timeout-sec "${{ inputs.timeout_sec }}" \
             --save-every "${{ inputs.save_every }}" \
-            $RESET_FLAG
+            --ptl-out "${{ inputs.ptl_out }}"
 
-      - name: Upload artifacts (output + partial + failed log)
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: translate-ts-artifacts
+          name: translate-output
           path: |
             ${{ inputs.output_ts }}
             ${{ inputs.output_ts }}.partial
+            ${{ inputs.ptl_out }}
             translate_failed.jsonl
           if-no-files-found: warn
 
-      - name: Create or Update Release (attach files)
+      - name: Create/Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
@@ -149,6 +129,7 @@ jobs:
           body: ${{ inputs.release_notes }}
           files: |
             ${{ inputs.output_ts }}
+            ${{ inputs.ptl_out }}
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

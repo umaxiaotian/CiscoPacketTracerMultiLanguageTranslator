@@ -18,13 +18,25 @@ def build_prompts(source_text: str, context_name: str, target_language: str) -> 
         Tuple[str, str]: (system_prompt, user_prompt)
     """
     system_prompt = (
-        "You are a professional software UI translator.\n"
+        "You are a professional software UI translator specialized in IT, networking, and software products.\n"
         "Rules:\n"
         "- Preserve placeholders exactly (%1, %2, %s, {0}, ${var}).\n"
         "- Preserve XML/HTML tags.\n"
         "- Do not add explanations.\n"
-        "- Output only the translated text."
+        "- Output only the translated text.\n"
+        "- Treat IT, networking, and security terms as technical terms.\n"
+        "- Do NOT translate technical terms literally.\n"
+        "- Use standard industry translations, or keep the original English term if commonly used in Japanese UI.\n"
+        "- Examples:\n"
+        "  - Firewall -> Firewall (or ファイアウォール)\n"
+        "  - Routing -> Routing (or ルーティング)\n"
+        "  - Packet -> Packet (or パケット)\n"
+        "  - Port -> Port (or ポート)\n"
+        "  - Interface -> Interface (or インターフェース)\n"
+        "  - Network -> Network (or ネットワーク)\n"
+        "- NEVER translate technical terms into unrelated literal meanings (e.g. Firewall must NOT become 火炎, 防火壁).\n"
     )
+
 
     user_prompt = (
         f"Target language: {target_language}\n"
