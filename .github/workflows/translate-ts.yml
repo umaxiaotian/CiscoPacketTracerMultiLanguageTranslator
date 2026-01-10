@@ -86,36 +86,38 @@ jobs:
 
       - name: Install Qt Linguist tools (Ubuntu)
         run: |
-          set -e
+          set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y qt6-tools-dev-tools linguist-qt6
       
-          # lrelease の実体を探す（lrelease / lrelease-qt6 両対応）
-          if command -v lrelease >/dev/null 2>&1; then
-            echo "Found lrelease: $(command -v lrelease)"
-          elif command -v lrelease-qt6 >/dev/null 2>&1; then
-            echo "Found lrelease-qt6: $(command -v lrelease-qt6)"
-            # 以降の処理が lrelease を期待しているなら symlink を作る
-            sudo ln -sf "$(command -v lrelease-qt6)" /usr/local/bin/lrelease
-            echo "Symlinked /usr/local/bin/lrelease -> lrelease-qt6"
-          else
-            echo "ERROR: lrelease not found"
-            echo "PATH=$PATH"
-            ls -la /usr/bin | grep -E 'lrelease|lupdate|linguist' || true
+          # どこに入ったかを dpkg で探索（PATH依存しない）
+          LRELEASE_PATH="$(dpkg -L qt6-tools-dev-tools | grep -E '/lrelease(-qt6)?$' | head -n 1 || true)"
+          if [ -z "$LRELEASE_PATH" ]; then
+            # パッケージ名違いに備えて追加探索
+            LRELEASE_PATH="$(dpkg -L linguist-qt6 | grep -E '/lrelease(-qt6)?$' | head -n 1 || true)"
+          fi
+      
+          if [ -z "$LRELEASE_PATH" ]; then
+            echo "ERROR: lrelease not found in installed packages"
+            dpkg -L qt6-tools-dev-tools | head -n 200 || true
+            dpkg -L linguist-qt6 | head -n 200 || true
             exit 1
           fi
       
-          # 動作確認（戻り値が怪しいので落とさない）
-          lrelease -h >/dev/null 2>&1 || true
+          echo "Found lrelease at: $LRELEASE_PATH"
       
-
-
+          # Python 側に渡す（あなたの ptl_export.py が QT_LRELEASE_PATH を読む前提）
+          echo "QT_LRELEASE_PATH=$LRELEASE_PATH" >> "$GITHUB_ENV"
+      
+          # ついでに PATH にも追加（任意）
+          echo "PATH=$(dirname "$LRELEASE_PATH"):$PATH" >> "$GITHUB_ENV"
 
       - name: Run translation + PTL export
         env:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          QT_LRELEASE_PATH: ${{ env.QT_LRELEASE_PATH }}
         run: |
           set -e
           python src/main.py "${{ inputs.input_ts }}" \
@@ -153,6 +155,7 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 
