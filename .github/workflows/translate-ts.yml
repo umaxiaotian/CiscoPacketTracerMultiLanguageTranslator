@@ -84,14 +84,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai python-dotenv
 
-      - name: Install Qt lrelease
+      - name: Install Qt lrelease (Ubuntu)
         run: |
-          set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y qt6-l10n-tools
+          sudo apt-get install -y qt6-tools-dev-tools qt6-l10n-tools
+      
+          # 確認だけ（exit code を壊さない）
           command -v lrelease
-          dpkg -s qt6-l10n-tools | sed -n 's/^Version: //p'
-          lrelease -h || true
+          lrelease -h > /dev/null 2>&1 || true
+
 
 
       - name: Run translation + PTL export
@@ -136,5 +137,6 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
