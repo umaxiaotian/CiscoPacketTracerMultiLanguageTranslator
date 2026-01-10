@@ -84,33 +84,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install openai python-dotenv
 
-      - name: Install Qt Linguist tools (Ubuntu)
+      - name: Install Qt (aqt) for lrelease
         run: |
-          set -euxo pipefail
-          sudo apt-get update
-          sudo apt-get install -y qt6-tools-dev-tools linguist-qt6
+          python -m pip install --upgrade pip
+          pip install aqtinstall
+          aqt --version
       
-          # どこに入ったかを dpkg で探索（PATH依存しない）
-          LRELEASE_PATH="$(dpkg -L qt6-tools-dev-tools | grep -E '/lrelease(-qt6)?$' | head -n 1 || true)"
-          if [ -z "$LRELEASE_PATH" ]; then
-            # パッケージ名違いに備えて追加探索
-            LRELEASE_PATH="$(dpkg -L linguist-qt6 | grep -E '/lrelease(-qt6)?$' | head -n 1 || true)"
-          fi
+          # Qt 6.6.3 を例に入れる（必要なら変更）
+          aqt install-qt linux desktop 6.6.3 gcc_64 -O ${{ runner.temp }}/Qt
       
-          if [ -z "$LRELEASE_PATH" ]; then
-            echo "ERROR: lrelease not found in installed packages"
-            dpkg -L qt6-tools-dev-tools | head -n 200 || true
-            dpkg -L linguist-qt6 | head -n 200 || true
-            exit 1
-          fi
-      
-          echo "Found lrelease at: $LRELEASE_PATH"
-      
-          # Python 側に渡す（あなたの ptl_export.py が QT_LRELEASE_PATH を読む前提）
-          echo "QT_LRELEASE_PATH=$LRELEASE_PATH" >> "$GITHUB_ENV"
-      
-          # ついでに PATH にも追加（任意）
-          echo "PATH=$(dirname "$LRELEASE_PATH"):$PATH" >> "$GITHUB_ENV"
+          echo "${{ runner.temp }}/Qt/6.6.3/gcc_64/bin" >> $GITHUB_PATH
+          lrelease -h >/dev/null 2>&1 || true
+          command -v lrelease
 
       - name: Run translation + PTL export
         env:
@@ -155,6 +140,7 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
 
