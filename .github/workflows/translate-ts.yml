@@ -86,10 +86,12 @@ jobs:
 
       - name: Install Qt lrelease
         run: |
+          set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y qt6-l10n-tools
           command -v lrelease
           dpkg -s qt6-l10n-tools | sed -n 's/^Version: //p'
+          lrelease -h || true
 
 
       - name: Run translation + PTL export
@@ -134,4 +136,5 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
