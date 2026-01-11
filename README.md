@@ -39,12 +39,6 @@ Packet Tracer’s UI uses language files (`.ptl`) that can be added or selected 
 
 > Note: [Article](https://hetare-nw.net/archives/995)
 
-### Creating or Installing Custom Translations
-
-If you want localized UI files not officially distributed:
-
-* Community posts and guides explain how to create or install `.ptl` files by editing the language folder and selecting the new language from Preferences.
-
 ## Features
 
 * ✅ Async translation with configurable concurrency
