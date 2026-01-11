@@ -131,12 +131,17 @@ jobs:
             ${{ inputs.ptl_out }}
             translate_failed.jsonl
           if-no-files-found: warn
+      - name: Build release metadata
+        id: relmeta
+        run: |
+          DATE_UTC="$(date -u +'%Y-%m-%d')"
+          echo "release_name=Qt TS Translation (${{ inputs.target_name }}) ${DATE_UTC}" >> "$GITHUB_OUTPUT"
 
-      - name: Create/Update Release
+      - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag }}
-          name: ${{ inputs.release_name }}
+          name: ${{ steps.relmeta.outputs.release_name }}
           prerelease: ${{ inputs.prerelease }}
           body: ${{ inputs.release_notes }}
           files: |
@@ -145,6 +150,8 @@ jobs:
             translate_failed.jsonl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
 
 
 
