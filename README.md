@@ -3,25 +3,57 @@
 
 This repository provides a command-line tool and GitHub Actions workflow to:
 
-- Translate Qt Linguist `.ts` files using Azure OpenAI
-- Preserve placeholders and XML/HTML tags
-- Generate translated `.ts` files
-- Compile `.ptl` (Qt binary translation file) using `lrelease`
-- Publish results as GitHub Releases
+* Translate Qt Linguist `.ts` files using Azure OpenAI
+* Preserve placeholders and XML/HTML tags
+* Generate translated `.ts` files
+* Compile `.ptl` (Qt binary translation file) using `lrelease`
+* Publish results as GitHub Releases
 
 The tool is designed for **software UI localization**, especially for IT / networking products.
 
----
+## Packet Tracer Installation Resources
+
+You can download Cisco Packet Tracer from the official Cisco Networking Academy resources page:
+
+🔗 **Cisco Packet Tracer download & resources**
+[https://www.netacad.com/resources/lab/cisco-packet-tracer-resources](https://www.netacad.com/resources/lab/cisco-packet-tracer-resources)
+
+### How to Install Cisco Packet Tracer
+
+1. Visit the **Cisco Packet Tracer download page** linked above.
+2. Log in or sign up for a *Cisco Networking Academy* account.
+3. Scroll to your desired platform (Windows / macOS / Linux) and download the installer.
+4. Run the installer and follow the on-screen steps to install Packet Tracer on your system.
+
+## Installing and Changing Languages in Packet Tracer
+
+Packet Tracer’s UI uses language files (`.ptl`) that can be added or selected within the software:
+
+### Basic Language Installation / Change
+
+1. Place the `.ptl` language file in the Packet Tracer `languages` folder (inside the Packet Tracer installation directory).
+2. Start Packet Tracer.
+3. Go to **Options → Preferences** (or `Ctrl+R` / `Cmd+R`).
+4. Under the **Languages** list, select your language.
+5. Click **Change Language** and restart Packet Tracer to apply. 
+
+> Note: [Article](https://hetare-nw.net/archives/995)
+
+### Creating or Installing Custom Translations
+
+If you want localized UI files not officially distributed:
+
+* Community posts and guides explain how to create or install `.ptl` files by editing the language folder and selecting the new language from Preferences.
 
 ## Features
 
-- ✅ Async translation with configurable concurrency
-- ✅ Progress reporting and periodic auto-save
-- ✅ Retry & timeout handling
-- ✅ Technical-term–aware system prompt (avoids literal mistranslation)
-- ✅ Qt `.ptl` generation via official Qt tools
-- ✅ GitHub Actions workflow with manual execution
-- ✅ Outputs both `.ts` and `.ptl` as Release assets
+* ✅ Async translation with configurable concurrency
+* ✅ Progress reporting and periodic auto-save
+* ✅ Retry & timeout handling
+* ✅ Technical-term–aware system prompt (avoids literal mistranslation)
+* ✅ Qt `.ptl` generation via official Qt tools
+* ✅ GitHub Actions workflow with manual execution
+* ✅ Outputs both `.ts` and `.ptl` as Release assets
 
 ---
 
@@ -29,13 +61,13 @@ The tool is designed for **software UI localization**, especially for IT / netwo
 
 ### Local execution
 
-- Python **3.11+**
-- Azure OpenAI resource
-- Qt `lrelease` (Qt Linguist tools)
+* Python **3.11+**
+* Azure OpenAI resource
+* Qt `lrelease` (Qt Linguist tools)
 
 ### GitHub Actions
 
-- No local Qt installation required  
+* No local Qt installation required
   (Qt is installed automatically via `aqtinstall` in the workflow)
 
 ---
@@ -46,7 +78,7 @@ The tool is designed for **software UI localization**, especially for IT / netwo
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-````
+```
 
 ---
 
@@ -159,4 +191,3 @@ No Personal Access Token is required.
 * `$GITHUB_PATH` is updated correctly across workflow steps
 * `.ptl` generation is guaranteed before Release publication
 
----
