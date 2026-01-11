@@ -78,8 +78,6 @@ def build_qph_xml(
     Returns:
         ElementTree: QPH 用 XML ツリー。
     """
-    # <!DOCTYPE QPH> は xml.etree だと直接書きづらいので、書き出し時に付与する運用も多いです。
-    # Qt Linguist は DOCTYPE 無しでも読めるケースが多いですが、必要なら write_qph() で付けます。
     root = ET.Element("QPH")
 
     # 任意のメタ情報（互換性のため “必須” にはしない）
@@ -116,3 +114,4 @@ def write_qph(tree: ET.ElementTree, out_path: str, *, include_doctype: bool = Tr
         f.write(doctype)
         f.write(xml_bytes)
         f.write(b"\n")
+
